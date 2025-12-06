@@ -1,0 +1,8 @@
+{
+  "name": "SUOLINGO",
+  "description": "An intelligent voice learning assistant powered by Gemini 2.5, featuring TTS, STT, Live Conversation, and Avatar Video Generation.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
