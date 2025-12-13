@@ -1,20 +1,63 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
 
-# Run and deploy your AI Studio app
+# 🚀 SUOLINGO
 
-This contains everything you need to run your app locally.
+**Suolingo**, Google'ın en yeni **Gemini 2.5** ve **Veo** modelleri ile güçlendirilmiş, yeni nesil bir sesli dil öğrenme asistanıdır. Geleneksel dil öğrenme uygulamalarının ötesine geçerek, kullanıcıya tamamen kişiselleştirilmiş, görsel ve işitsel bir yapay zeka deneyimi sunar.
 
-View your app in AI Studio: https://ai.studio/apps/drive/1stORxYnVyJLwumcCZxwecCXr1bJ4hXK-
+![Project Status](https://img.shields.io/badge/Status-Live-success)
+![AI Model](https://img.shields.io/badge/AI-Gemini%202.5%20Flash-blue)
+![Tech](https://img.shields.io/badge/Tech-React%2019%20%7C%20Tailwind-61DAFB)
 
-## Run Locally
+## 🌟 Öne Çıkan Özellikler
 
-**Prerequisites:**  Node.js
+### 🧠 NotebookLM (Akıllı Defter)
+Kendi ders notlarınızı veya makalelerinizi uygulamaya yükleyin. Gemini 2.5'in geniş bağlam penceresi sayesinde, yapay zeka **sadece sizin notlarınız üzerinden** sorularınızı yanıtlar. Sınavlara hazırlanmak için birebir!
 
+### 🎬 Veo Avatar Stüdyosu
+Statik bir fotoğraf yükleyin ve **Google Veo** video üretim modeli ile onu konuşan, göz kırpan, canlı bir karaktere dönüştürün. Kendi avatarınızla sohbet etme deneyimi!
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+### 🗣️ Gerçek Zamanlı İletişim (TTS & STT)
+- **Text-to-Speech:** `gemini-2.5-flash-preview-tts` modeli ile insan doğallığında ses sentezi.
+- **Speech-to-Text:** Konuştuklarınızı anlık olarak yazıya döken yüksek doğruluklu algılama.
+
+### 📚 Kelime Kartları
+Günlük kelime dağarcığınızı geliştirmek için hazırlanan, anlam ve Türkçe karşılıklarını içeren interaktif kartlar.
+
+## 🛠️ Kullanılan Teknolojiler
+
+Bu proje, modern web teknolojileri ve Google'ın en yeni AI SDK'ları kullanılarak geliştirilmiştir.
+
+- **Frontend:** React 19, TypeScript
+- **Styling:** Tailwind CSS, Glassmorphism UI
+- **AI SDK:** `@google/genai`
+- **Models:**
+  - `gemini-2.5-flash` (Mantık ve RAG işlemleri)
+  - `gemini-2.5-flash-preview-tts` (Ses sentezi)
+  - `veo-3.1-fast-generate-preview` (Video avatar üretimi)
+  - `gemini-2.5-flash-image` (Görüntü işleme)
+
+## 🚀 Kurulum ve Çalıştırma
+
+Projeyi yerel ortamınızda çalıştırmak için:
+
+1. **Repoyu klonlayın:**
+   ```bash
+   git clone https://github.com/EminUstun/SuolingoAiStudio.git
+   cd SuolingoAiStudio
+   ```
+
+2. **Bağımlılıkları yükleyin:**
+   ```bash
+   npm install
+   ```
+
+3. **API Anahtarını Ayarlayın:**
+   Google AI Studio üzerinden alacağınız API anahtarını proje başladığında arayüzden girebilirsiniz. (Veo modeli için faturalı hesap gerekebilir).
+
+4. **Uygulamayı Başlatın:**
+   ```bash
+   npm run dev
+   ```
+
+## 👨‍💻 Geliştirici
+
+Bu proje **Emin Üstün** tarafından, **Nurettin Şenyer** ve **Ömer DURMUŞ** hocaların danışmanlığında geliştirilmiştir.

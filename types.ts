@@ -4,13 +4,14 @@ export enum AppScreen {
   TTS = 'TTS',
   STT = 'STT',
   WORD = 'WORD',
+  NOTEBOOK = 'NOTEBOOK',
   HISTORY = 'HISTORY',
   SETTINGS = 'SETTINGS'
 }
 
 export interface HistoryItem {
   id: string;
-  type: 'TTS' | 'STT' | 'WORD';
+  type: 'TTS' | 'STT' | 'WORD' | 'NOTEBOOK';
   text: string; // The prompt, transcription, or summary
   timestamp: number;
   mediaUrl?: string; // For generated video or audio

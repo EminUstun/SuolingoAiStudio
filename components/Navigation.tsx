@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { AppScreen } from '../types';
-import { Home, Mic, Speaker, BookOpen, History, Settings } from 'lucide-react';
+import { Home, Mic, Speaker, BookOpen, History, Settings, FileText } from 'lucide-react';
 
 interface NavigationProps {
   currentScreen: AppScreen;
@@ -14,6 +14,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentScreen, onNavigate }) =>
     { id: AppScreen.TTS, icon: Speaker, label: 'TTS' },
     { id: AppScreen.STT, icon: Mic, label: 'STT' },
     { id: AppScreen.WORD, icon: BookOpen, label: 'Words' },
+    { id: AppScreen.NOTEBOOK, icon: FileText, label: 'Notebook' },
     { id: AppScreen.HISTORY, icon: History, label: 'History' },
     { id: AppScreen.SETTINGS, icon: Settings, label: 'Avatar' },
   ];

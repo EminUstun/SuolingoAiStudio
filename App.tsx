@@ -3,8 +3,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { AppScreen, AvatarConfig, AvatarState, HistoryItem } from './types';
 import Navigation from './components/Navigation';
 import Avatar from './components/Avatar';
-import { generateSpeech, generateVeoVideoFromImage, blobToBase64, editAvatarImage } from './services/geminiService';
-import { Mic, Play, Square, Upload, Loader2, Sparkles, Speaker, Wand2, Film, Check, Music, Volume2, BookOpen, MoveRight, MoveLeft } from 'lucide-react';
+import { generateSpeech, generateVeoVideoFromImage, blobToBase64, editAvatarImage, askNotebook } from './services/geminiService';
+import { Mic, Play, Square, Upload, Loader2, Sparkles, Speaker, Wand2, Film, Check, Music, Volume2, BookOpen, MoveRight, MoveLeft, FileText, MessageSquare, Plus, Trash2 } from 'lucide-react';
 
 // --- Data: Word List ---
 const WORD_LIST = [
@@ -106,6 +106,13 @@ const App: React.FC = () => {
   // Word Feature State
   const [wordHistory, setWordHistory] = useState<number[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(0);
+
+  // Notebook Feature State
+  const [notebookContext, setNotebookContext] = useState('');
+  const [notebookQuery, setNotebookQuery] = useState('');
+  const [notebookAnswer, setNotebookAnswer] = useState('');
+  const [isProcessingNotebook, setIsProcessingNotebook] = useState(false);
+  const [showNotebookInput, setShowNotebookInput] = useState(true);
 
   // Avatar Studio State
   const [editPrompt, setEditPrompt] = useState('');
@@ -241,6 +248,42 @@ const App: React.FC = () => {
       }
   };
 
+  // --- Notebook Handler ---
+  const handleNotebookUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const text = ev.target?.result as string;
+        setNotebookContext(text);
+        setShowNotebookInput(false); // Switch to chat view
+      };
+      reader.readAsText(file);
+    }
+  };
+
+  const handleNotebookAsk = async () => {
+    if (!notebookQuery.trim() || !notebookContext) return;
+    setIsProcessingNotebook(true);
+    setAvatarState(AvatarState.THINKING);
+
+    try {
+      const answer = await askNotebook(notebookContext, notebookQuery);
+      setNotebookAnswer(answer);
+      setAvatarState(AvatarState.SPEAKING);
+      
+      // Optionally read the answer
+      // await playTTS(answer);
+      
+      addToHistory('NOTEBOOK', `Q: ${notebookQuery} | A: ${answer}`);
+      setTimeout(() => setAvatarState(AvatarState.IDLE), 2000);
+    } catch (err) {
+      console.error(err);
+      setAvatarState(AvatarState.SAD);
+    } finally {
+      setIsProcessingNotebook(false);
+    }
+  };
 
   // --- Avatar Studio Handlers ---
   const handleAvatarEdit = async () => {
@@ -314,7 +357,13 @@ const App: React.FC = () => {
     setPlayingHistoryId(item.id);
 
     try {
-        await playTTS(item.text);
+        if (item.type === 'NOTEBOOK') {
+           // For notebook, read the answer part
+           const answer = item.text.split('A: ')[1];
+           if (answer) await playTTS(answer);
+        } else {
+           await playTTS(item.text);
+        }
     } catch (e) {
         console.error("History Playback Error", e);
     } finally {
@@ -337,41 +386,33 @@ const App: React.FC = () => {
         <Avatar config={avatarConfig} state={avatarState} size="xl" />
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
-        <button onClick={() => setScreen(AppScreen.TTS)} className="glass-panel p-6 rounded-2xl flex items-center justify-between group hover:bg-white/10 transition">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400 group-hover:scale-110 transition">
-              <Speaker size={24} />
+      <div className="grid grid-cols-2 gap-4">
+        <button onClick={() => setScreen(AppScreen.TTS)} className="glass-panel p-4 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition">
+            <div className="p-3 bg-indigo-500/20 rounded-xl text-indigo-400">
+              <Speaker size={20} />
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-lg">Text to Speech</h3>
-              <p className="text-xs text-slate-400">Listen to natural pronunciation</p>
-            </div>
-          </div>
+            <span className="font-semibold text-sm">TTS</span>
         </button>
 
-        <button onClick={() => setScreen(AppScreen.STT)} className="glass-panel p-6 rounded-2xl flex items-center justify-between group hover:bg-white/10 transition">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-pink-500/20 rounded-xl text-pink-400 group-hover:scale-110 transition">
-              <Mic size={24} />
+        <button onClick={() => setScreen(AppScreen.STT)} className="glass-panel p-4 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition">
+            <div className="p-3 bg-pink-500/20 rounded-xl text-pink-400">
+              <Mic size={20} />
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-lg">Speech to Text</h3>
-              <p className="text-xs text-slate-400">Practice your speaking</p>
-            </div>
-          </div>
+            <span className="font-semibold text-sm">STT</span>
         </button>
 
-         <button onClick={() => setScreen(AppScreen.WORD)} className="glass-panel p-6 rounded-2xl flex items-center justify-between group hover:bg-white/10 transition">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-green-500/20 rounded-xl text-green-400 group-hover:scale-110 transition">
-              <BookOpen size={24} />
+         <button onClick={() => setScreen(AppScreen.WORD)} className="glass-panel p-4 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition">
+            <div className="p-3 bg-green-500/20 rounded-xl text-green-400">
+              <BookOpen size={20} />
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-lg">Daily Words</h3>
-              <p className="text-xs text-slate-400">Learn new vocabulary</p>
+            <span className="font-semibold text-sm">Words</span>
+        </button>
+
+        <button onClick={() => setScreen(AppScreen.NOTEBOOK)} className="glass-panel p-4 rounded-2xl flex flex-col items-center gap-3 hover:bg-white/10 transition">
+            <div className="p-3 bg-yellow-500/20 rounded-xl text-yellow-400">
+              <FileText size={20} />
             </div>
-          </div>
+            <span className="font-semibold text-sm">Notebook</span>
         </button>
       </div>
     </div>
@@ -475,6 +516,114 @@ const App: React.FC = () => {
       );
   }
 
+  const renderNotebook = () => (
+    <div className="p-6 pb-24 h-full flex flex-col">
+      <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-yellow-300">NotebookLM</h2>
+          {notebookContext && !showNotebookInput && (
+              <button onClick={() => setNotebookContext('')} className="text-xs text-red-400 flex items-center gap-1">
+                  <Trash2 size={12} /> Clear Context
+              </button>
+          )}
+      </div>
+
+      {!notebookContext ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center gap-6 animate-float">
+             <div className="w-24 h-24 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-400">
+                 <FileText size={48} />
+             </div>
+             <div className="space-y-2">
+                 <h3 className="text-xl font-semibold">Add Your Study Material</h3>
+                 <p className="text-slate-400 text-sm max-w-xs mx-auto">
+                     Paste your lecture notes, articles, or summaries here. I will answer questions based only on this text.
+                 </p>
+             </div>
+             
+             <div className="w-full glass-panel p-4 rounded-xl">
+                 <textarea 
+                     className="w-full h-32 bg-transparent resize-none focus:outline-none text-sm"
+                     placeholder="Paste text here..."
+                     onChange={(e) => setNotebookContext(e.target.value)}
+                 />
+                 <div className="flex items-center justify-center mt-2 border-t border-white/10 pt-2 relative">
+                     <span className="text-xs text-slate-500 absolute bg-[#0F172A] px-2 -top-4">OR</span>
+                     <label className="cursor-pointer flex items-center gap-2 text-sm text-indigo-400 hover:text-indigo-300 mt-2">
+                         <Upload size={16} /> Upload .txt file
+                         <input type="file" accept=".txt" className="hidden" onChange={handleNotebookUpload} />
+                     </label>
+                 </div>
+             </div>
+          </div>
+      ) : (
+          <div className="flex-1 flex flex-col gap-4">
+              {/* Context Indicator */}
+              <div className="glass-panel p-3 rounded-lg flex items-center justify-between bg-yellow-500/5 border-yellow-500/20">
+                  <div className="flex items-center gap-2 text-yellow-200/80 text-sm">
+                      <BookOpen size={16} />
+                      <span className="truncate max-w-[200px]">Active Context ({notebookContext.length} chars)</span>
+                  </div>
+                  <button onClick={() => setShowNotebookInput(!showNotebookInput)} className="text-xs text-slate-400 underline">
+                      {showNotebookInput ? 'Hide' : 'View'}
+                  </button>
+              </div>
+
+              {showNotebookInput && (
+                   <textarea 
+                   value={notebookContext}
+                   onChange={(e) => setNotebookContext(e.target.value)}
+                   className="w-full h-32 bg-black/20 rounded-lg p-2 text-xs text-slate-400 resize-none focus:outline-none mb-4"
+               />
+              )}
+
+              {/* Chat Area */}
+              <div className="flex-1 overflow-y-auto space-y-4">
+                  <div className="flex gap-3">
+                       <Avatar config={avatarConfig} state={AvatarState.IDLE} size="sm" />
+                       <div className="bg-white/10 rounded-r-xl rounded-bl-xl p-3 text-sm">
+                           I've read your notes. What would you like to know about them?
+                       </div>
+                  </div>
+                  
+                  {notebookAnswer && (
+                      <>
+                      <div className="flex gap-3 justify-end">
+                          <div className="bg-indigo-600 rounded-l-xl rounded-br-xl p-3 text-sm">
+                              {notebookQuery}
+                          </div>
+                      </div>
+                      <div className="flex gap-3">
+                           <Avatar config={avatarConfig} state={isProcessingNotebook ? AvatarState.THINKING : AvatarState.SPEAKING} size="sm" />
+                           <div className="bg-white/10 rounded-r-xl rounded-bl-xl p-3 text-sm">
+                               {isProcessingNotebook ? <Loader2 size={16} className="animate-spin" /> : notebookAnswer}
+                           </div>
+                      </div>
+                      </>
+                  )}
+              </div>
+
+              {/* Input Area */}
+              <div className="glass-panel p-2 rounded-xl flex items-center gap-2">
+                  <input 
+                      type="text" 
+                      value={notebookQuery}
+                      onChange={(e) => setNotebookQuery(e.target.value)}
+                      placeholder="Ask a question about your notes..."
+                      className="flex-1 bg-transparent p-2 focus:outline-none text-sm"
+                      onKeyDown={(e) => e.key === 'Enter' && handleNotebookAsk()}
+                  />
+                  <button 
+                      onClick={handleNotebookAsk}
+                      disabled={isProcessingNotebook || !notebookQuery}
+                      className="p-2 bg-yellow-500 text-black rounded-lg hover:bg-yellow-400 disabled:opacity-50"
+                  >
+                      {isProcessingNotebook ? <Loader2 size={18} className="animate-spin"/> : <MessageSquare size={18} />}
+                  </button>
+              </div>
+          </div>
+      )}
+    </div>
+  );
+
   const renderHistory = () => (
     <div className="p-6 pb-24">
       <div className="flex justify-between items-center mb-6">
@@ -492,6 +641,7 @@ const App: React.FC = () => {
                 <span className={`text-xs px-2 py-1 rounded font-bold ${
                   item.type === 'TTS' ? 'bg-indigo-500/20 text-indigo-300' : 
                   item.type === 'STT' ? 'bg-pink-500/20 text-pink-300' : 
+                  item.type === 'NOTEBOOK' ? 'bg-yellow-500/20 text-yellow-300' :
                   'bg-green-500/20 text-green-300'
                 }`}>
                   {item.type}
@@ -500,9 +650,9 @@ const App: React.FC = () => {
               </div>
               
               <div className="flex justify-between items-center gap-3">
-                  <p className="text-sm text-slate-200 flex-1">{item.text}</p>
+                  <p className="text-sm text-slate-200 flex-1 line-clamp-3">{item.text}</p>
                   
-                  {(item.type === 'TTS' || item.type === 'STT') && (
+                  {(item.type === 'TTS' || item.type === 'STT' || item.type === 'NOTEBOOK') && (
                       <button 
                           onClick={() => handlePlayHistory(item)}
                           disabled={!!playingHistoryId}
@@ -660,6 +810,7 @@ const App: React.FC = () => {
       case AppScreen.TTS: return renderTTS();
       case AppScreen.STT: return renderSTT();
       case AppScreen.WORD: return renderWord();
+      case AppScreen.NOTEBOOK: return renderNotebook();
       case AppScreen.HISTORY: return renderHistory();
       case AppScreen.SETTINGS: return renderSettings();
       default: return renderHome();

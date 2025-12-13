@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Modality } from "@google/genai";
 
 // TTS Service
@@ -25,6 +26,28 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore'): 
 
   } catch (error) {
     console.error("TTS Error:", error);
+    throw error;
+  }
+};
+
+// NotebookLM Simulation (RAG-like Q&A)
+export const askNotebook = async (contextText: string, question: string): Promise<string> => {
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+  
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash", // Flash is great for large context
+      contents: `Context: ${contextText}\n\nQuestion: ${question}`,
+      config: {
+        systemInstruction: "You are an intelligent study assistant named 'Suolingo Notebook'. Your goal is to answer the user's question based STRICTLY on the provided Context. If the answer is not in the context, say 'I cannot find the answer in your notes.' Do not use outside knowledge. Keep answers concise and helpful.",
+        temperature: 0.3, // Low temperature for more factual answers based on context
+      },
+    });
+
+    return response.text || "I couldn't generate an answer.";
+
+  } catch (error) {
+    console.error("Notebook Error:", error);
     throw error;
   }
 };
